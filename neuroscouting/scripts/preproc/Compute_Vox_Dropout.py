@@ -3,21 +3,20 @@ import numpy as np
 import utils as utils
 import sys
 import os
-# from nilearn.image import resample_to_img
 
 
-#4. Determine if the coverage of the functional scans results in needing to drop certain nodes due to sub-threshold coverage. 
+# Determine if the coverage of the functional scans results in needing to drop certain nodes due to sub-threshold coverage. 
 #	a. Scripts: [1] /scripts/preproc/Compute_Vox_Dropout.py [2] /scripts/preproc/utils.py --> functions load_nifti3D, ROIcheck
 #	b. Must edit contents of script for atlas-specific names, numbers, etc. 
 #		i. [Compute_Vox_Dropout.py] Change 'nNodes', 'label', and remove the '0/1' used for debugging purposes
 #
 #==> If there are any missing nodes, the script with save a numpy file with...
-#==>==> The index numbers for the missing nodes across all subjects. If x>0 subjects are missing 1 node, that node is considered missing for the entire grou
+#==>==> The index numbers for the missing nodes across all subjects. If x>0 subjects are missing 1 node, that node is considered missing for the entire group
 #==>==> The index numbers for the common nodes. This is a list of all the nodes that had coverage in all subjects. 
 
 
 ### Assess which ROIs don't have enough voxels as per a set threshold.
-### Requires a atlas/parcellation in a single volume (i.e. each node has a diff value) that is warped to the subject's T1W sapce and is the same resolution. 
+### Requires an atlas/parcellation in a single volume (i.e. each node has a diff value) that is warped to the subject's T1W sapce and is the same resolution. 
 
 
 ##################################
@@ -29,9 +28,8 @@ import os
 ### Threshold Probability .25 (Cortex, Subcortex):
 atlas_str = 'brainnetome/BNA_MPM_thr25_125mm_funcRes.nii.gz'
 
-### DO NOT USE THIS ONE IT HAS A 3-VOXEL NODE THAT DISAPPEARS AT FUNCTIONAL RESOLUTION ([I assume] Threshold Probability .25) with Cerebellum (Cortex, Subcortex, Cerebellum):
+### DO NOT USE THIS ONE. IT HAS A 3-VOXEL NODE THAT DISAPPEARS AT FUNCTIONAL RESOLUTION 
 #atlas_str = 'brainnetome/BN_Atlas_274_combined_funcRes.nii.gz'
-
 
 
 ### Schaefer 400 Node ###
@@ -44,7 +42,7 @@ atlas_str = 'brainnetome/BNA_MPM_thr25_125mm_funcRes.nii.gz'
 
 def main(argv = sys.argv):
 
-	subDir = '/home/despoB/adameich/Experiments/nScout/data/derivatives/denoise_out' #'/home/despoC/despolarity/dynamic_FC/data/derivatives/preproc_32p_.01-.1/'
+	subDir = '/home/despoB/adameich/Experiments/nScout/data/derivatives/denoise_out'
 	sublist = utils.get_sublist(subDir) 
 	print(sublist)
 
@@ -70,14 +68,8 @@ def main(argv = sys.argv):
 			missingMat[subIdx, tmp] = badcount / nNodes
 			tmp+=1
 				
-	#subMsNode_bin = np.sum(missingIdxs_Per_Sub,0) #
-	#subMsNode_bin[np.where(subMsNode_bin>0)] = 1 # 
-
-	#missingIdxsMatnSub.append(subMsNode_bin) # 
-
 	
 	commonRoiMask = np.sum(missingIdxsMat,0)==0
-	#missingIdxsMatnSub = np.sum(missingIdxsMatnSub,0)
 	missingMatnRuns = np.sum(missingIdxsMat,0)
 
 	unique_Missing_Nodes = np.unique(unique_Missing_Nodes_raw)
@@ -86,17 +78,12 @@ def main(argv = sys.argv):
 	commonROIs = [x for x in range(nNodes) if x not in  unique_Missing_Nodes]
 	commonROIs = np.asarray(commonROIs) 
 	
-	
 	#Save common ROI list
 	np.save('/home/despoB/adameich/Experiments/nScout/data/analyses/commonROIs_list_thresh-%s_%s.npy' %(voxThresh, label), commonROIs)
 
 	# Save missing ROI list
 	np.save('/home/despoB/adameich/Experiments/nScout/data/analyses/missingROIs_list_thresh-%s_%s.npy' %(voxThresh,label), unique_Missing_Nodes)
 
-	# np.save('/home/despoC/despolarity/dynamic_FC/data/analyses/commonRois_mask_thresh-%s_Schaefer400.npy' %(voxThresh), commonRoiMask)
-	# np.save('/home/despoC/despolarity/dynamic_FC/data/analyses/missingRoisNRuns_thresh-%s_Schaefer400.npy' %(voxThresh), missingMatnRuns)
-	# np.save('/home/despoC/despolarity/dynamic_FC/data/analyses/missingRoisNSubs_thresh-%s_Schaefer400.npy' %(voxThresh), missingIdxsMatnSub)
-	# np.savetxt('/home/despoC/despolarity/dynamic_FC/data/QC/missingNodesPercentage_Schaefer400.csv', missingMat, fmt='%8.7f', delimiter = ',')
 
 ### MAIN SCRIPT ###
 
